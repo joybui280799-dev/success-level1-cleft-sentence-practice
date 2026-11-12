@@ -1,0 +1,398 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>VUIVUI Cleft Practice</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: one centred column; sticky bar with timer; one question card at a time; results as printable report */
+:root{
+ --bg:#F3ECE0; --surface:#FBF8F2; --ink:#1D2A57; --soft:#566089; --line:#D8CDBA;
+ --btn-bg:#1D2A57; --btn-fg:#FBF8F2; --accent:#B7CFF0; --peach:#F6D2BF;
+ --ok-bg:#CFE9D5; --ok-ink:#1D5A35; --bad-bg:#F7D3CF; --bad-ink:#8A2B24; --note-bg:#FBE7B9; --note-ink:#6B4A0B;
+ --head:'Fredoka','Nunito',system-ui,sans-serif; --body:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --bg:#12183A; --surface:#1B2350; --ink:#F1EBDD; --soft:#AEB6D8; --line:#36406E;
+ --btn-bg:#B7CFF0; --btn-fg:#12183A; --accent:#3E5693; --peach:#5A4350;
+ --ok-bg:#1F4D36; --ok-ink:#C4EAD0; --bad-bg:#5A2B30; --bad-ink:#F7CBC6; --note-bg:#5A4A1C; --note-ink:#F6DFA6; color-scheme:dark}}
+:root[data-theme="dark"]{
+ --bg:#12183A; --surface:#1B2350; --ink:#F1EBDD; --soft:#AEB6D8; --line:#36406E;
+ --btn-bg:#B7CFF0; --btn-fg:#12183A; --accent:#3E5693; --peach:#5A4350;
+ --ok-bg:#1F4D36; --ok-ink:#C4EAD0; --bad-bg:#5A2B30; --bad-ink:#F7CBC6; --note-bg:#5A4A1C; --note-ink:#F6DFA6; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+ padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.bar-in{max-width:720px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-family:var(--head);font-weight:600;font-size:15px;letter-spacing:.06em;text-transform:uppercase}
+.clock{font-variant-numeric:tabular-nums;font-weight:800;font-size:18px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px 12px;white-space:nowrap}
+.clock small{font-weight:600;color:var(--soft);font-size:12px;margin-right:6px;letter-spacing:.04em}
+main{max-width:720px;margin:0 auto;padding-block:20px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--head);font-weight:600;line-height:1.2;text-wrap:balance;margin:0}
+h1{font-size:30px} h2{font-size:22px}
+p{margin:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+.stack{display:grid;gap:16px}
+.soft{color:var(--soft)}
+.btn{font:inherit;font-weight:800;background:var(--btn-bg);color:var(--btn-fg);border:2px solid var(--btn-bg);border-radius:10px;padding:10px 20px;cursor:pointer;min-height:44px}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+input[type=text]{font:inherit;width:100%;padding:11px 14px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+label{font-weight:700;display:block;margin-bottom:6px}
+/* intro */
+.parts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0;padding:0;list-style:none}
+.parts li{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px}
+.parts b{display:block;font-family:var(--head);font-weight:600;font-size:16px}
+.rules{margin:0;padding-left:20px;display:grid;gap:4px}
+/* progress */
+.prog{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin-bottom:6px}
+.seg{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.seg i{display:block;height:100%;background:var(--ink);width:0}
+.meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:14px;color:var(--soft);font-weight:700;margin-bottom:14px}
+.chip{display:inline-block;font-size:13px;font-weight:800;border-radius:6px;padding:2px 10px;background:var(--accent);color:var(--ink);letter-spacing:.02em}
+.qhead{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.instr{font-size:15px;color:var(--soft);margin-bottom:14px}
+.prompt{font-size:21px;font-weight:700;line-height:1.4;margin-bottom:16px}
+.prompt.en{font-size:20px}
+.opts{display:grid;gap:10px}
+.opt{font:inherit;text-align:left;background:var(--bg);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;min-height:48px;display:flex;gap:12px;align-items:flex-start}
+.opt .k{font-weight:800;min-width:1.4em;color:var(--soft)}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt.bad{background:var(--bad-bg);color:var(--bad-ink);border-color:var(--bad-ink);opacity:1}
+.opt.ok{background:var(--ok-bg);color:var(--ok-ink);border-color:var(--ok-ink)}
+.opt:disabled{cursor:default}
+.opt:disabled:not(.bad):not(.ok){opacity:.55}
+.fb{min-height:1.6em;margin-top:12px;font-weight:700}
+.fb.bad{color:var(--bad-ink)}
+.reveal{margin-top:14px;border-radius:10px;padding:14px 16px;background:var(--ok-bg);color:var(--ok-ink)}
+.reveal .big{font-size:19px;font-weight:800;margin:4px 0}
+.reveal .why{font-size:15px;margin-top:6px}
+.remember{margin-top:10px;background:var(--note-bg);color:var(--note-ink);border-radius:8px;padding:8px 12px;font-weight:700;font-size:15px}
+.next{margin-top:16px;display:flex;justify-content:flex-end}
+/* order */
+.area{min-height:64px;border:2px dashed var(--line);border-radius:10px;padding:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;align-content:flex-start;background:var(--bg)}
+.pool{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;min-height:48px}
+.tile{font:inherit;font-weight:700;background:var(--surface);color:var(--ink);border:2px solid var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer;min-height:44px}
+.area .tile{background:var(--accent)}
+.tile:disabled{cursor:default}
+.area.bad{border-color:var(--bad-ink);border-style:solid}
+.area.ok{border-color:var(--ok-ink);border-style:solid;background:var(--ok-bg)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+/* rewrite */
+.orig{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:20px;font-weight:600;margin-bottom:12px}
+.orig b{background:var(--peach);border-radius:4px;padding:0 4px;font-weight:800}
+.cues{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.cues .chip{background:var(--peach)}
+.hint{font-size:15px;color:var(--soft);margin-top:8px}
+/* results */
+.result{display:grid;gap:16px}
+.shot{background:var(--note-bg);color:var(--note-ink);border-radius:10px;padding:12px 16px;font-weight:800}
+.who{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kpi span{display:block;font-size:13px;font-weight:700;color:var(--soft)}
+.kpi b{font-family:var(--head);font-weight:600;font-size:26px;font-variant-numeric:tabular-nums}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--line);padding:7px 5px;text-align:right}
+th:first-child,td:first-child{text-align:left}
+td .sub{display:block;font-size:12.5px;color:var(--soft)}
+th{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--soft)}
+.meter{display:inline-block;width:56px;height:8px;border-radius:4px;background:var(--line);vertical-align:middle;margin-left:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ok-ink)}
+.mem{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.mem li{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg)}
+.mem .en{font-weight:800}
+.mem .vi{font-size:15px;color:var(--soft)}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.shake{animation:shake .25s 1}
+@media (prefers-reduced-motion:reduce){.shake{animation:none}}
+@media (max-width:520px){.meter{display:none}}
+@media (max-width:420px){h1{font-size:25px}.prompt{font-size:19px}.card{padding:16px}}
+</style>
+
+<div class="bar"><div class="bar-in"><span class="brand">VUIVUI English Class</span><span class="clock" id="clock"><small>THỜI GIAN</small><span id="clockv">00:00</span></span></div></div>
+<main id="stage"></main>
+
+<script>
+const T_IT="It-cleft",T_NOT="It is not … but … that",T_WH="What-cleft",T_RS="Reason cleft",T_ALL="All-cleft";
+const EX=[
+{id:"A",title:"Bài 1",name:"Chọn câu tiếng Anh đúng",
+ instr:"Chọn câu dịch tiếng Anh đúng (dùng câu chẻ) cho câu tiếng Việt. Nếu chọn sai, em chọn lại cho đến khi đúng.",type:"mcq",
+ items:[
+ {tag:T_IT,vi:"Chính mạng xã hội đã thay đổi cách thanh thiếu niên giao tiếp.",ans:"It is social media that has changed the way teenagers communicate.",
+  wrong:["It is social media what has changed the way teenagers communicate.","It social media that has changed the way teenagers communicate.","It is the way teenagers communicate that social media has changed."],
+  note:"It + is + thành phần nhấn mạnh + that + mệnh đề. Không dùng what trong câu chẻ với It."},
+ {tag:T_IT,vi:"Chính vào năm 2019, chính phủ đã thông qua đạo luật mới.",ans:"It was in 2019 that the government passed the new law.",
+  wrong:["It was in 2019 when the government passed the new law.","It is in 2019 that the government passed the new law.","It was the government that passed the new law in 2019."],
+  note:"Nhấn mạnh thời gian trong quá khứ: It was + thời gian + that + quá khứ đơn. Trong văn viết dùng that, không dùng when."},
+ {tag:T_WH,vi:"Điều khiến tôi lo lắng nhất là nhiều thanh thiếu niên không ngủ đủ giấc.",ans:"What worries me most is that many teenagers do not get enough sleep.",
+  wrong:["What worries me most it is that many teenagers do not get enough sleep.","What worries me most that many teenagers do not get enough sleep.","It worries me most what many teenagers do not get enough sleep."],
+  note:"What + mệnh đề + is + that-clause. Không bỏ is và không lặp lại it."},
+ {tag:T_RS,vi:"Lí do chính khiến nhiều học sinh căng thẳng là họ có quá nhiều bài tập.",ans:"The main reason why many students feel stressed is that they have too much homework.",
+  wrong:["The main reason why many students feel stressed is because they have too much homework.","The main reason why many students feel stressed it is that they have too much homework.","The main reason what many students feel stressed is that they have too much homework."],
+  note:"The reason why … is that …: viết is that, không viết is because."},
+ {tag:T_WH,vi:"Thứ mà các thành phố cần nhất là hệ thống giao thông công cộng tốt hơn.",ans:"What cities need most is better public transport.",
+  wrong:["What cities need most are better public transport.","What do cities need most is better public transport.","It is cities need most better public transport."],
+  note:"Public transport là danh từ không đếm được nên dùng is. Trong mệnh đề What không đảo trợ động từ."},
+ {tag:T_NOT,vi:"Không phải tài năng mà chính sự chăm chỉ mới dẫn đến thành công.",ans:"It is not talent but hard work that leads to success.",
+  wrong:["It is not talent but hard work who leads to success.","It is not talent but hard work that lead to success.","It not talent but hard work that leads to success."],
+  note:"It is not A but B that …: động từ sau that chia theo B (hard work là số ít nên leads); vật dùng that, không dùng who."},
+ {tag:T_ALL,vi:"Tất cả những gì học sinh muốn là một nơi yên tĩnh để học.",ans:"All the students wanted was a quiet place to study.",
+  wrong:["All the students wanted were a quiet place to study.","All the students wanted it was a quiet place to study.","The students wanted all was a quiet place to study."],
+  note:"All + mệnh đề + was + thành phần nhấn mạnh. Vế sau là a quiet place (số ít) nên dùng was."},
+ {tag:T_IT,vi:"Chính phụ huynh mới là người nên chịu trách nhiệm về an toàn trực tuyến của con em mình.",ans:"It is parents who should take responsibility for their children's online safety.",
+  wrong:["It is parents whom should take responsibility for their children's online safety.","It are parents who should take responsibility for their children's online safety.","Parents it is who should take responsibility for their children's online safety."],
+  note:"Nhấn mạnh người làm chủ ngữ: who hoặc that (không dùng whom). It luôn đi với is / was."},
+ {tag:T_IT,vi:"Chính ở các thành phố lớn, ô nhiễm không khí là vấn đề nghiêm trọng nhất.",ans:"It is in big cities that air pollution is the most serious problem.",
+  wrong:["It is in big cities where air pollution is the most serious problem.","It is in big cities that air pollution are the most serious problem.","It is big cities in that air pollution is the most serious problem."],
+  note:"Nhấn mạnh nơi chốn: It is + in + nơi chốn + that …. Không dùng where; air pollution là danh từ không đếm được nên dùng is."},
+ {tag:T_IT,vi:"Chính trong đại dịch, việc học trực tuyến đã trở nên phổ biến.",ans:"It was during the pandemic that online learning became popular.",
+  wrong:["It was during the pandemic what online learning became popular.","It was during the pandemic that online learning becomes popular.","It is during the pandemic that online learning became popular."],
+  note:"Quá khứ: It was … that + quá khứ đơn. Thì của be và của động từ sau that phải phù hợp."}
+]},
+{id:"B",title:"Bài 2",name:"Chọn câu tiếng Việt đúng",
+ instr:"Chọn bản dịch tiếng Việt đúng cho câu tiếng Anh. Chú ý phần được nhấn mạnh. Nếu chọn sai, em chọn lại cho đến khi đúng.",type:"mcq-vi",
+ items:[
+ {tag:T_IT,en:"It was last summer that I first realised how important sleep is.",ans:"Chính vào mùa hè năm ngoái tôi mới lần đầu nhận ra giấc ngủ quan trọng đến mức nào.",
+  wrong:["Mùa hè năm ngoái tôi nhận ra giấc ngủ không quan trọng.","Chính giấc ngủ đã khiến tôi nhận ra mùa hè năm ngoái quan trọng.","Tôi đã nhận ra giấc ngủ quan trọng từ nhiều mùa hè trước."],
+  note:"It was + thời gian + that …: nhấn mạnh thời điểm (“chính vào … mới …”)."},
+ {tag:T_WH,en:"What the city needs is not more roads but better public transport.",ans:"Thứ mà thành phố cần không phải là thêm đường mà là phương tiện công cộng tốt hơn.",
+  wrong:["Thành phố cần thêm đường hơn là phương tiện công cộng.","Thành phố không cần phương tiện công cộng mà cần thêm đường.","Chính phương tiện công cộng đã làm thành phố cần thêm đường."],
+  note:"What … is not A but B: điều cần không phải A mà là B."},
+ {tag:T_RS,en:"The main reason why she quit her job is that she wanted more time for her family.",ans:"Lí do chính khiến cô ấy nghỉ việc là cô ấy muốn có nhiều thời gian hơn cho gia đình.",
+  wrong:["Cô ấy muốn nghỉ việc vì gia đình đã khiến cô ấy mất thời gian.","Lí do chính khiến gia đình cô ấy nghỉ việc là họ muốn có thêm thời gian.","Cô ấy nghỉ việc, và lí do chính là cô ấy không muốn có thời gian cho gia đình."],
+  note:"The main reason why … is that …: sau that là lí do (cô ấy muốn có thêm thời gian cho gia đình)."},
+ {tag:T_ALL,en:"All I want from this course is a clear explanation of the grammar.",ans:"Tất cả những gì tôi muốn ở khóa học này là một lời giải thích rõ ràng về ngữ pháp.",
+  wrong:["Tôi muốn toàn bộ khóa học giải thích ngữ pháp rõ ràng.","Tôi không muốn gì từ khóa học này ngoài việc học ngữ pháp mới.","Tất cả khóa học này đều muốn tôi hiểu rõ ngữ pháp."],
+  note:"All + mệnh đề + is + …: “tất cả những gì … là …” (chỉ cần một điều)."},
+ {tag:T_NOT,en:"It is not the price but the quality of the product that customers care about.",ans:"Khách hàng quan tâm không phải giá cả mà là chất lượng sản phẩm.",
+  wrong:["Khách hàng quan tâm đến giá cả hơn chất lượng sản phẩm.","Giá cả sản phẩm không quan trọng với chất lượng khách hàng.","Không phải khách hàng mà chính chất lượng sản phẩm quan tâm đến giá cả."],
+  note:"It is not A but B that …: không phải A mà chính là B. Phần sau that cho biết ai / cái gì quan tâm điều đó."},
+ {tag:T_IT,en:"It was my teacher who encouraged me to apply for the scholarship.",ans:"Chính giáo viên của tôi là người đã khuyến khích tôi nộp đơn xin học bổng.",
+  wrong:["Giáo viên của tôi nộp đơn xin học bổng cho tôi.","Tôi đã khuyến khích giáo viên của mình nộp đơn xin học bổng.","Giáo viên của tôi đã từ chối khuyến khích tôi xin học bổng."],
+  note:"It was + người + who …: nhấn mạnh ai là người làm hành động."},
+ {tag:T_WH,en:"What surprised researchers was how quickly the disease spread.",ans:"Điều khiến các nhà nghiên cứu ngạc nhiên là căn bệnh lây lan nhanh đến mức nào.",
+  wrong:["Các nhà nghiên cứu ngạc nhiên vì căn bệnh lây lan quá chậm.","Căn bệnh đã làm các nhà nghiên cứu lây lan nhanh chóng.","Các nhà nghiên cứu không bất ngờ trước tốc độ lây lan của căn bệnh."],
+  note:"What + động từ + was + how …: “điều khiến … là …”."},
+ {tag:T_IT,en:"It was only after the accident that he realised how dangerous the road was.",ans:"Mãi đến sau vụ tai nạn, anh ấy mới nhận ra con đường nguy hiểm đến mức nào.",
+  wrong:["Anh ấy gặp tai nạn vì đã nhận ra con đường nguy hiểm.","Anh ấy nhận ra con đường nguy hiểm trước khi xảy ra tai nạn.","Chỉ sau tai nạn con đường mới trở nên nguy hiểm hơn."],
+  note:"It was only after … that …: “mãi đến sau … mới …”. Only làm tăng sắc thái nhấn mạnh về thời điểm."}
+]},
+{id:"C",title:"Bài 3",name:"Sắp xếp từ thành câu",
+ instr:"Bấm vào các từ để xếp thành câu chẻ hoàn chỉnh (bấm lại vào từ đã xếp để bỏ ra). Bấm “Kiểm tra”. Nếu sai, em xếp lại cho đến khi đúng.",type:"order",
+ items:[
+ {tag:T_IT,en:"It is the lack of exercise that causes most health problems among teenagers.",vi:"Chính việc thiếu vận động gây ra hầu hết các vấn đề sức khỏe ở thanh thiếu niên.",note:"It is + focus + that + động từ chia theo focus (lack – số ít nên causes)."},
+ {tag:T_WH,en:"What many students find difficult is managing their time.",vi:"Điều nhiều học sinh thấy khó là quản lí thời gian của mình.",note:"What + mệnh đề + is + V-ing / danh từ. Mệnh đề What chứa động từ find."},
+ {tag:T_RS,en:"The main reason why people shop online is that it saves time.",vi:"Lí do chính khiến mọi người mua sắm trực tuyến là vì nó tiết kiệm thời gian.",note:"The main reason why + mệnh đề + is that + mệnh đề."},
+ {tag:T_ALL,en:"All I need is a little more time to finish the project.",vi:"Tất cả những gì tôi cần là thêm một chút thời gian để hoàn thành dự án.",note:"All + mệnh đề + is + thành phần nhấn mạnh; không cần that sau All."},
+ {tag:T_IT,en:"It was during the 1990s that the internet became widely available.",vi:"Chính trong những năm 1990, internet mới trở nên phổ biến rộng rãi.",note:"It was + thời gian + that + quá khứ đơn."},
+ {tag:T_NOT,en:"It is not money but time that busy parents lack.",vi:"Thứ mà các bậc cha mẹ bận rộn thiếu không phải là tiền mà là thời gian.",note:"It is not A but B that …: A và B đứng giữa is và that."},
+ {tag:T_WH,en:"What worries scientists most is that the ice is melting so quickly.",vi:"Điều khiến các nhà khoa học lo ngại nhất là băng đang tan quá nhanh.",note:"What + động từ + is + that-clause."},
+ {tag:T_IT,en:"It was the manager who suggested working from home twice a week.",vi:"Chính người quản lí đã đề xuất làm việc ở nhà hai ngày một tuần.",note:"It was + người + who + động từ."},
+ {tag:T_RS,en:"The reason why he failed the exam is that he did not revise regularly.",vi:"Lí do anh ấy trượt kì thi là anh ấy không ôn bài thường xuyên.",note:"The reason why + mệnh đề + is that + mệnh đề."},
+ {tag:T_WH,en:"What parents should do is encourage children to read more books.",vi:"Điều cha mẹ nên làm là khuyến khích trẻ đọc nhiều sách hơn.",note:"What + mệnh đề + is + V-inf (có thể thêm to)."}
+]},
+{id:"D",title:"Bài 4",name:"Viết lại câu với từ gợi ý",
+ instr:"Viết lại câu để nhấn mạnh phần in đậm, dùng cấu trúc gợi ý. Gõ cả câu, không cần dấu chấm cuối câu. Nếu sai, em sửa lại cho đến khi đúng.",type:"rewrite",
+ items:[
+ {tag:T_WH,orig:"Teenagers need **more sleep**.",cue:["What","…","is"],accept:["What teenagers need is more sleep"],note:"What + mệnh đề + is + thành phần nhấn mạnh."},
+ {tag:T_IT,orig:"**Pollution** causes most breathing problems.",cue:["It","is","…","that"],accept:["It is pollution that causes most breathing problems","It is pollution which causes most breathing problems"],note:"It is + pollution + that + động từ (causes – chia theo pollution)."},
+ {tag:T_RS,orig:"Many people give up exercising because **they do not see quick results**.",cue:["The main reason why","…","is that","…"],accept:["The main reason why many people give up exercising is that they do not see quick results"],note:"The main reason why + mệnh đề + is that + lí do."},
+ {tag:T_ALL,orig:"The students only wanted **a longer break**.",cue:["All","…","was"],accept:["All the students wanted was a longer break","All that the students wanted was a longer break"],note:"All + mệnh đề + was + thành phần nhấn mạnh. Only trong câu gốc được thay bằng All."},
+ {tag:T_NOT,orig:"**Good relationships**, not money, make people happy.",cue:["It is not","…","but","…","that"],accept:["It is not money but good relationships that make people happy","It is not money but good relationships which make people happy"],note:"It is not A but B that …: B là phần chính (good relationships – số nhiều nên make)."},
+ {tag:T_IT,orig:"The company opened its first factory in Vietnam **in 2015**.",cue:["It was","…","that"],accept:["It was in 2015 that the company opened its first factory in Vietnam"],note:"Nhấn mạnh thời gian: It was in 2015 that + quá khứ đơn."},
+ {tag:T_WH,orig:"I admire **her honesty** most.",cue:["What","…","is"],accept:["What I admire most is her honesty","What I admire most about her is her honesty"],note:"What + I admire most + is + her honesty."},
+ {tag:T_IT,orig:"**Her sister** encouraged her to enter the competition.",cue:["It was","…","who"],accept:["It was her sister who encouraged her to enter the competition","It was her sister that encouraged her to enter the competition"],note:"Nhấn mạnh người: It was + người + who / that + động từ."}
+]}
+];
+
+const $=s=>document.querySelector(s);
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const fmt=ms=>{const s=Math.round(ms/1000);return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")};
+const fmtS=ms=>(ms/1000).toFixed(0)+" giây";
+const bold=s=>esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const norm=s=>s.toLowerCase().replace(/[’‘`]/g,"'").replace(/n't\b/g," not").replace(/[.,;:!?"“”()]/g," ").replace(/\s+/g," ").trim();
+
+// ---------- state ----------
+const Q=[];
+EX.forEach((e,ei)=>e.items.forEach((it,ii)=>Q.push({ex:ei,idx:ii,tag:it.tag,it,type:e.type,attempts:0,ms:0,done:false})));
+let cur=0,name="",running=false,last=0,totalMs=0,startedAt=null,finishedAt=null;
+setInterval(()=>{
+ if(!running)return;const n=performance.now(),dt=n-last;last=n;
+ if(document.hidden)return;
+ totalMs+=dt;if(Q[cur]&&!Q[cur].done)Q[cur].ms+=dt;
+ $("#clockv").textContent=fmt(totalMs);
+},250);
+document.addEventListener("visibilitychange",()=>{last=performance.now()});
+
+// ---------- start ----------
+function renderStart(){
+ const st=$("#stage");st.innerHTML="";
+ const c=el("div","card stack");
+ c.innerHTML=`<div><h1>Cleft sentences</h1><p class="soft" style="margin-top:6px">Bài tập thêm · Level B1–B2 · Câu chẻ</p></div>
+ <ul class="parts"><li><b>Bài 1</b>Chọn câu tiếng Anh đúng · 10 câu</li><li><b>Bài 2</b>Chọn câu tiếng Việt đúng · 8 câu</li><li><b>Bài 3</b>Sắp xếp từ thành câu · 10 câu</li><li><b>Bài 4</b>Viết lại câu với từ gợi ý · 8 câu</li></ul>
+ <ul class="rules"><li>Làm sai thì chọn lại hoặc điền lại cho đến khi đúng. Đáp án chính xác chỉ hiện ra sau khi em trả lời đúng.</li>
+ <li>Câu nào em làm sai, bên dưới sẽ có ghi chú để em chép lại và học thuộc.</li>
+ <li>Đồng hồ tính thời gian chạy từ lúc em bấm “Bắt đầu” và dừng khi em rời khỏi tab.</li>
+ <li>Làm xong, em chụp màn hình bảng kết quả và gửi cho cô giáo.</li></ul>
+ <div><label for="nm">Họ và tên của em</label><input type="text" id="nm" autocomplete="name" placeholder="Ví dụ: Nguyễn Minh Anh"></div>
+ <div><button class="btn" id="go" disabled>Bắt đầu</button></div>`;
+ st.appendChild(c);
+ const nm=$("#nm"),go=$("#go");
+ nm.addEventListener("input",()=>{go.disabled=!nm.value.trim()});
+ nm.addEventListener("keydown",e=>{if(e.key==="Enter"&&nm.value.trim())go.click()});
+ go.addEventListener("click",()=>{name=nm.value.trim();startedAt=new Date();running=true;last=performance.now();cur=0;renderQ()});
+}
+
+// ---------- question frame ----------
+function frame(q){
+ const e=EX[q.ex];
+ const st=$("#stage");st.innerHTML="";
+ const prog=el("div","prog");
+ EX.forEach((x,i)=>{const s=el("div","seg");const done=Q.filter(z=>z.ex===i&&z.done).length;s.innerHTML=`<i style="width:${done/x.items.length*100}%"></i>`;prog.appendChild(s)});
+ st.appendChild(prog);
+ st.appendChild(el("div","meta",`<span>${e.title} · câu ${q.idx+1}/${e.items.length}</span><span>Tổng: ${cur+1}/${Q.length}</span>`));
+ const card=el("div","card");
+ card.innerHTML=`<div class="qhead"><h2>${e.title}. ${e.name}</h2></div><p class="instr">${e.instr}</p>`;
+ st.appendChild(card);
+ return card;
+}
+function renderQ(){
+ if(cur>=Q.length){return renderResult()}
+ const q=Q[cur],card=frame(q);
+ ({mcq:mcq,"mcq-vi":mcq,order:order,rewrite:rewrite})[q.type](q,card);
+ window.scrollTo({top:0});
+}
+function reveal(q,card,html,vi){
+ q.done=true;
+ const r=el("div","reveal");
+ r.innerHTML=`<div>✓ Chính xác!</div><div class="big">${html}</div>${vi?`<div>${esc(vi)}</div>`:""}<div class="why">${esc(q.it.note)}</div>`;
+ card.appendChild(r);
+ if(q.attempts>0)card.appendChild(el("div","remember","* Em nên ghi lại câu này xuống để nhớ."));
+ const n=el("div","next");const b=el("button","btn",cur===Q.length-1?"Xem kết quả":"Câu tiếp theo");
+ b.addEventListener("click",()=>{cur++;renderQ()});n.appendChild(b);card.appendChild(n);b.focus();
+ q.ansText=html;
+}
+function wrongMsg(q,card,fb,msg){q.attempts++;fb.className="fb bad";fb.textContent=msg;fb.classList.remove("shake");void fb.offsetWidth;fb.classList.add("shake")}
+
+// ---------- MCQ ----------
+function mcq(q,card){
+ const it=q.it,isVi=q.type==="mcq-vi";
+ card.appendChild(el("div","prompt"+(isVi?" en":""),esc(isVi?it.en:it.vi)));
+ if(!q.opts)q.opts=shuffle([it.ans,...it.wrong]);
+ const box=el("div","opts");card.appendChild(box);
+ const fb=el("div","fb");fb.setAttribute("aria-live","polite");card.appendChild(fb);
+ q.opts.forEach((o,i)=>{
+  const b=el("button","opt",`<span class="k">${"ABCD"[i]}.</span><span>${esc(o)}</span>`);
+  b.addEventListener("click",()=>{
+   if(o===it.ans){
+    [...box.children].forEach(x=>x.disabled=true);b.classList.add("ok");fb.textContent="";
+    reveal(q,card,esc(it.ans),isVi?"":"");
+   }else{b.classList.add("bad");b.disabled=true;wrongMsg(q,card,fb,"Chưa đúng. Em chọn lại nhé.")}
+  });box.appendChild(b);
+ });
+}
+
+// ---------- ORDER ----------
+function order(q,card){
+ const it=q.it;
+ const words=it.en.replace(/\.$/,"").split(" ").map((w,i)=>i===0&&w!=="I"?w.toLowerCase():w);
+ if(!q.tiles){let t;do{t=shuffle(words.map((w,i)=>({id:i,w})))}while(t.every((x,i)=>x.id===i));q.tiles=t;q.placed=[]}
+ card.appendChild(el("div","prompt en",esc(it.vi)));
+ const area=el("div","area");area.setAttribute("aria-label","Câu của em");
+ const pool=el("div","pool");
+ const fb=el("div","fb");fb.setAttribute("aria-live","polite");
+ const row=el("div","row");
+ const chk=el("button","btn","Kiểm tra"),clr=el("button","btn ghost","Xóa hết");
+ row.append(chk,clr);
+ card.append(area,pool,fb,row);
+ function draw(){
+  area.innerHTML="";pool.innerHTML="";area.classList.remove("bad","ok");
+  q.placed.forEach(id=>{const b=el("button","tile",esc(words[id]));b.addEventListener("click",()=>{q.placed=q.placed.filter(x=>x!==id);fb.textContent="";draw()});area.appendChild(b)});
+  q.tiles.filter(t=>!q.placed.includes(t.id)).forEach(t=>{const b=el("button","tile",esc(t.w));b.addEventListener("click",()=>{q.placed.push(t.id);fb.textContent="";draw()});pool.appendChild(b)});
+  chk.disabled=q.placed.length!==words.length;clr.disabled=!q.placed.length;
+ }
+ clr.addEventListener("click",()=>{q.placed=[];fb.textContent="";draw()});
+ chk.addEventListener("click",()=>{
+  const mine=q.placed.map(id=>words[id]).join(" ").toLowerCase();
+  if(mine===words.join(" ").toLowerCase()){
+   area.classList.add("ok");[...area.children,...pool.children].forEach(x=>x.disabled=true);row.remove();fb.textContent="";
+   reveal(q,card,esc(it.en),"");
+  }else{area.classList.add("bad");wrongMsg(q,card,fb,"Chưa đúng. Em kiểm tra trật tự từ rồi xếp lại nhé.");area.classList.remove("shake");void area.offsetWidth;area.classList.add("shake")}
+ });
+ draw();
+}
+
+// ---------- REWRITE ----------
+function rewrite(q,card){
+ const it=q.it;
+ card.appendChild(el("div","orig",bold(it.orig)));
+ const cues=el("div","cues",`<span class="soft" style="font-weight:700">Từ gợi ý:</span>`);
+ it.cue.forEach(c=>cues.appendChild(el("span","chip",esc(c))));
+ card.appendChild(cues);
+ const inp=el("input");inp.type="text";inp.id="ans";inp.autocomplete="off";inp.spellcheck=false;inp.setAttribute("autocapitalize","off");inp.setAttribute("aria-label","Câu viết lại của em");inp.placeholder="Gõ cả câu viết lại ở đây";
+ const fb=el("div","fb");fb.setAttribute("aria-live","polite");
+ const row=el("div","row");const chk=el("button","btn","Kiểm tra"),hint=el("button","btn ghost","Gợi ý");row.append(chk,hint);
+ const h=el("div","hint");
+ card.append(inp,fb,row,h);
+ hint.addEventListener("click",()=>{h.textContent="Câu bắt đầu bằng: "+it.accept[0].split(" ").slice(0,3).join(" ")+" …"});
+ function check(){
+  const v=norm(inp.value);if(!v)return;
+  if(it.accept.some(a=>norm(a)===v)){
+   inp.disabled=true;chk.disabled=true;hint.disabled=true;row.remove();h.remove();fb.textContent="";
+   reveal(q,card,esc(it.accept[0]+"."),"");
+  }else wrongMsg(q,card,fb,"Chưa đúng. Em kiểm tra cấu trúc, thì của động từ và chính tả rồi điền lại nhé.");
+ }
+ chk.addEventListener("click",check);
+ inp.addEventListener("keydown",e=>{if(e.key==="Enter")check()});
+ inp.focus();
+}
+
+// ---------- RESULT ----------
+function renderResult(){
+ running=false;finishedAt=new Date();
+ $("#clockv").textContent=fmt(totalMs);
+ const st=$("#stage");st.innerHTML="";
+ const first=Q.filter(q=>q.attempts===0).length,wrong=Q.reduce((a,q)=>a+q.attempts,0),pct=Math.round(first/Q.length*100);
+ const agg=(keyFn,keys)=>keys.map(k=>{const g=Q.filter(q=>keyFn(q)===k);return{k,n:g.length,ok:g.filter(q=>q.attempts===0).length,wr:g.reduce((a,q)=>a+q.attempts,0),ms:g.reduce((a,q)=>a+q.ms,0)}});
+ const byEx=agg(q=>q.ex,EX.map((_,i)=>i));
+ const tags=[T_IT,T_NOT,T_WH,T_RS,T_ALL];
+ const byTag=agg(q=>q.tag,tags);
+ const weak=byTag.filter(x=>x.n).map(x=>({...x,p:x.ok/x.n})).sort((a,b)=>a.p-b.p||b.wr-a.wr)[0];
+ const date=finishedAt.toLocaleDateString("vi-VN")+" "+finishedAt.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
+ const mem=Q.filter(q=>q.attempts>0);
+ const memText=q=>{const it=q.it;return q.type==="mcq"?{en:it.ans,vi:it.vi}:q.type==="mcq-vi"?{en:it.en,vi:it.ans}:q.type==="order"?{en:it.en,vi:it.vi}:{en:it.accept[0]+".",vi:""}};
+ const r=el("div","result");
+ r.innerHTML=`<div class="shot">Em chụp màn hình toàn bộ bảng kết quả này và gửi cho cô giáo nhé.</div>
+ <div class="card stack">
+  <div class="who"><h1>${esc(name)}</h1><span class="soft" style="font-weight:700">${esc(date)}</span></div>
+  <p class="soft" style="font-weight:700">Cleft sentences · Bài tập thêm B1–B2</p>
+  <div class="kpis">
+   <div class="kpi"><span>Tổng thời gian</span><b>${fmt(totalMs)}</b></div>
+   <div class="kpi"><span>Đúng ngay lần đầu</span><b>${first}/${Q.length}</b></div>
+   <div class="kpi"><span>Tỉ lệ</span><b>${pct}%</b></div>
+   <div class="kpi"><span>Số lần làm sai</span><b>${wrong}</b></div>
+  </div>
+  ${weak&&weak.ok<weak.n?`<p>Cấu trúc em cần ôn thêm: <b>${esc(weak.k)}</b> (đúng ngay lần đầu ${weak.ok}/${weak.n} câu).</p>`:`<p><b>Em đã làm đúng ngay lần đầu ở mọi cấu trúc.</b></p>`}
+ </div>
+ <div class="card stack"><h2>Kết quả theo bài</h2><div class="tw"><table><thead><tr><th>Bài</th><th>Câu</th><th>Đúng lần đầu</th><th>Lần sai</th><th>Thời gian</th></tr></thead><tbody>
+ ${byEx.map(x=>`<tr><td>${EX[x.k].title}<span class="sub">${esc(EX[x.k].name)}</span></td><td>${x.n}</td><td>${x.ok}/${x.n}</td><td>${x.wr}</td><td>${fmt(x.ms)}</td></tr>`).join("")}
+ </tbody></table></div></div>
+ <div class="card stack"><h2>Kết quả theo cấu trúc</h2><div class="tw"><table><thead><tr><th>Cấu trúc</th><th>Câu</th><th>Đúng lần đầu</th><th>Lần sai</th><th>TB / câu</th></tr></thead><tbody>
+ ${byTag.map(x=>`<tr><td>${esc(x.k)}</td><td>${x.n}</td><td>${x.ok}/${x.n}<span class="meter"><i style="width:${x.n?x.ok/x.n*100:0}%"></i></span></td><td>${x.wr}</td><td>${fmtS(x.ms/x.n)}</td></tr>`).join("")}
+ </tbody></table></div></div>
+ ${mem.length?`<div class="card stack"><h2>Các câu cần ghi nhớ</h2><p class="soft">* Em nên ghi lại những câu này xuống để nhớ.</p><ul class="mem">${mem.map(q=>{const m=memText(q);return `<li><span class="chip">${esc(q.tag)}</span><div class="en">${esc(m.en)}</div>${m.vi?`<div class="vi">${esc(m.vi)}</div>`:""}</li>`}).join("")}</ul></div>`:""}
+ <div><button class="btn ghost" id="again">Làm lại từ đầu</button></div>`;
+ st.appendChild(r);
+ $("#again").addEventListener("click",()=>location.reload());
+ window.scrollTo({top:0});
+}
+renderStart();
+</script>
+
+</body></html>
